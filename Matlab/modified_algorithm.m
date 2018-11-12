@@ -1,33 +1,51 @@
+% This file is part of script calculating QFI(t) and state coefficients of 
+% given state in cavity with displaced mirror.
+%
+% Main script. Sets all parameters, loads initial states' declarations,
+% creates necessary directories, and runs computation for given ranges of
+% time and g. Displays and exports QFI(t) after simulation for given g;
+% displays and exports multiplot QFI(t) for all gs.
+%
+% Author: Marcin Byra, UW
+% email: marcin.byra1@gmail.com
+% 09/2018
+
+global omegaM omega0 f maxSteps accuracy initialNbar g t chartsVisibility...
+    N debug
+% load states declarations
+load states.mat
+
+
+% *************************************************************************
+
+
+% CONTROL OF THE SIMULATION
+
+% Parameters - the same or close to those in Mathematica in order to 
+% compare results
 omegaM = 0.3;
 omega0 = 10;
 f = 0.001;
 maxSteps = 100;
 accuracy = 10;
 
-state5 = [0.2, 0.1i, 0.3i, 0.1, sqrt(1 - 0.2^2 - 0.3^2 - 2*0.1^2)];
-state5 = state5/norm(state5);
-state10 = [0.2, 0.1i, 0.3i, 0.1, 0.5, 0.2, 0.1i, 0.7i, 0.5, 0.05i];
-state101 = state10/norm(state10);
-state15 = [0.2, 0.1i, 0.3i, 0.1, 0.5, 0.2, 0.1i, 0.7i, 0.5, 0.05i, 0.8, ...
-    0.1, 0.05i, 0.4i, 0.2];
-state15 = state15/norm(state15);
+% Select state to generate QFI(t) and coefficients(t) for.
+initialState = state5Constr;
 
-state5Constr = [-0.17143-0.483256i, -0.184004-0.466691i,...
-    0.0000238363-0.0000768779i, 0.341161+0.277375i, -0.525566-0.125976i];
-state15Constr = [0.265834-0.0252019i, -0.00523809-0.00495137i,...
-                 0.294972-0.260994i, -0.0907457+0.293633i,...
-                 0.0140262-0.0181147i, -0.0833171+0.212157i,...
-                 0.0121167-0.00771775i, 0.258398+0.324393i,...
-                 0.3176+0.0554487i, 0.00118436-0.00185454i,...
-                 0.420994-0.0446258i, -0.00185298+0.00507704i,...
-                 0.0198546-0.193464i, -0.0628111+0.0426242i,...
-                 0.124764 +0.3347i];
+% Set on/off to view/hide figs with coefficient charts (every 0.25 t unit)
+chartsVisibility = 'on';
 
-current_state = state5Constr;
+% Toggle visibility of debug info
+debug = true;
 
-N = length(current_state);
+
+% *************************************************************************
+
+
+% ACTUAL CODE
+
+N = length(initialState);
 initialNbar = (N-1)/2;
-fprintf("N = %d\n", N);
 format shortG;
 
 % create directory for storing figures and jpegs:
@@ -36,80 +54,84 @@ if ~exist('f', 'dir')
    warning('Creating directory figures/'); 
    mkdir(fn);
 end
-
-time = 1:0.05:3;
-g_list = [0.01, 0.04, 0.08, 0.15, 0.3, 0.5];
+    
+time = 1:0.05:3; 
+g_list = [0.01, 0.04, 0.08, 0.15, 0.3, 0.5]; % coupling constant
 qfi_values = zeros(length(g_list), length(time));
-% 
-% fig = figure;
-% title('QFI(t) for 5-dimensional initial state, constrained');
-for a = 5:length(g_list)
+
+
+fprintf(sprintf('Starting a simulation of %-dimensional state:\n', N));
+display(initialState);
+fprintf('accuracy = %d, max steps = %d, omega0 = %.2f, omegaM = %.2f\n',...
+    accuracy, maxSteps, omega0, omegaM);
+% main loop generating evoultion for various values of g
+for a = 6:length(g_list)
     g = g_list(a);
-    fprintf('Starting loop for g = %.2f...\n', g);
-    for b = 1:length(time)
+    fprintf('\n g = %.2f...\n', g);
+    
+    for b = 1:length(time) % set plot density; units 2Pi/omega_0
         t = time(b);
-        fprintf('\tRunning calculations for t = %.2f...', t);
-        [rho, qfi, steps] = calculateOptimalQFI(f, g, (t + 0.0000001)*2*pi/omegaM,...
-            omegaM, omega0, maxSteps, accuracy, current_state, initialNbar, t);
-        fprintf('Done.\n');
-        if steps > 0
-            fprintf('\t\tAccuracy reached after %d steps.\n', steps);
-        else
-            fprintf('\t\tCould not reach accuracy after %d steps.\n', maxSteps);
-%             qfi = NaN;
-        end
-        fprintf('\t\tFound QFI = %f.\n.', real(qfi));
-        qfi_values(a, b) = real(qfi);
+        fprintf('\t t = %.2f...\n', t);
         
-%         fprintf('\tRunning calculations for t = %.2f... REVERSED STATE', t);
-%         [rho, qfi, steps] = calculateOptimalQFI(f, g, (t + 0.0000001)*2*pi/omegaM,...
-%             omegaM, omega0, maxSteps, accuracy, fliplr(current_state), initialNbar, t);
-%         fprintf('Done.\n');
-%         if steps > 0
-%             fprintf('\t\tAccuracy reached after %d steps.\n', steps);
-%         else
-%             fprintf('\t\tCould not reach accuracy after %d steps.\n', maxSteps);
-% %             qfi = NaN;
-%         end
-%         fprintf('\t\tFound QFI = %f.\n.', real(qfi));
-%         
-%         fprintf('\tRunning calculations for t = %.2f... SUPERPOSITION OF RESULTS', t);
-%         [rho, qfi, steps] = calculateOptimalQFI(f, g, (t + 0.0000001)*2*pi/omegaM,...
-%             omegaM, omega0, maxSteps, accuracy, fliplr(current_state), initialNbar, t);
-%         fprintf('Done.\n');
-%         if steps > 0
-%             fprintf('\t\tAccuracy reached after %d steps.\n', steps);
-%         else
-%             fprintf('\t\tCould not reach accuracy after %d steps.\n', maxSteps);
-% %             qfi = NaN;
-%         end
-%         fprintf('\t\tFound QFI = %f.\n.', real(qfi));
+        [newState, qfi_values(a, b)] = evolution(initialState, 'initial state');
         
+%         TODO
+%         evolution(fliplr(result), 'reversed initial state');
+%         evolution(initialState/2 + fliplr(result)/2,...
+%             'superposition of initial and reversed result state')
     end
-    fig = figure(a);
-%     subplot(2,3,a);
+    
+    % show QFI(t) plot and export png to subdirectory 'figures'
+    fh = figure('Name', sprintf('qfi(t) for N = %d and g = %d', N, g*100));
+    title(sprintf('QFI(t)for %d-dimensional initial state, constrained', N));
     semilogy(time, qfi_values(a, :));
-    title(sprintf('dim=%d, constrained, iterations:%d', N, maxSteps));
-    xlabel('t [2\pi/{\omega}m]'); % x-axis label
+    xlabel('t [2\pi/{\omega}m]');
     ylabel('QFI');
     legend(sprintf("g = %.2f", g), 'Location', 'southeast');
-    saveas(fig,[pwd sprintf('\\figures\\qfi_vs_t_dim_%d_g_%03d_iterations_%d.png'...
-    , N, g*100, maxSteps)]);
+    saveFmt = '\\figures\\qfi_vs_t_dim_%d_g_%03d.png';
+    saveas(fh,[pwd sprintf(saveFmt, N, g*100)]);
 end
 
-saveas(fig,[pwd sprintf('\\figures\\multisubplot_qfi_vs_t_dim_%d_g_%03d_iterations_%d.png'...
-    , N, g*100, maxSteps)]);
-
-fig = figure;
+% display QFI(t) multiplot for every g and expert png to subdir 'figures'
+fh = figure('Name', sprintf('qfi(t) for N = %d and all g', N));
 semilogy(time, qfi_values(1, :), time, qfi_values(2, :), time, ...
     qfi_values(3, :), time, qfi_values(4, :), time, qfi_values(5, :),...
     time, qfi_values(6, :));
-title(sprintf('dim=%d, constrained, iterations:%d', N, maxSteps));
-xlabel('t [2\pi/{\omega}m]'); % x-axis label
+title(sprintf('QFI(t)for %d-dimensional initial state, constrained', N));
+xlabel('t [2\pi/{\omega}m]');
 ylabel('QFI');
 legend('g = 0.01', 'g = 0.04','g = 0.08', 'g = 0.15', 'g = 0.3', ...
     'g = 0.5', 'Location', 'southeast');
-saveas(fig,[pwd sprintf('\\figures\\multiplot_qfi_vs_t_dim_%d_g_%03d_iterations_%d.png'...
-    , N, g*100, maxSteps)]);
+saveDirFmt = '\\figures\\multiplot_qfi_vs_t_dim_%d_g_%03d.png';
+saveas(fh,[pwd sprintf(saveDirFmt, N, g*100)]);
 
 
+
+
+% Simulates evolution of initial state for a given t and parameters. Prints
+% info to command window and checks if calculation was valid; if not,
+% changed qfi to NaN to avoid plotting this value.
+% Returns a pair: final state and its qfi.
+function [state, qfi] = evolution(currentState, stateStr) 
+    global omegaM omega0 f maxSteps accuracy initialNbar g t
+    
+    % Writing because it can be initial, reversed or superposition state
+    fprintf(sprintf('\t\tRunning evolution of %s...', stateStr));
+    
+    [state, qfi, steps] = calculateOptimalQFI(currentState);
+    fprintf(' Done.\n');
+
+    if steps > 0
+        fprintf('\t\tAccuracy reached after %d steps.\n', steps);
+    else
+        fprintf('\t\tCould not reach accuracy after %d steps.\n', maxSteps);
+    end
+    fprintf('\t\tFound QFI = %f.\n\n', real(qfi));
+
+    %just to avoid creating ugly plots when calculation was invalid:
+    if steps <= 0 || real(qfi) < 10
+        qfi = NaN;
+    end
+
+    qfi = real(qfi);
+end
