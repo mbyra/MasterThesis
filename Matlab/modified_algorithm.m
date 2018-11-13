@@ -27,10 +27,10 @@ omegaM = 0.3;
 omega0 = 10;
 f = 0.001;
 maxSteps = 100;
-accuracy = 10;
+accuracy = 1;
 
 % Select state to generate QFI(t) and coefficients(t) for.
-initialState = state15Constr;
+initialState = state5Constr;
 
 % Set on/off to view/hide figs with coefficient charts (every 0.25 t unit)
 chartsVisibility = 'on';
@@ -55,7 +55,7 @@ if ~exist('f', 'dir')
    mkdir(fn);
 end
     
-time = 1:0.05:3; 
+time = 1:0.05:5; 
 g_list = [0.01, 0.04, 0.08, 0.15, 0.3, 0.5]; % coupling constant
 qfi_values = zeros(length(g_list), length(time));
 

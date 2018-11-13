@@ -146,7 +146,7 @@ for step = 1:maxSteps
             title(sprintf('t=%f, g=%f, constrained, qfi=%d', t, g, qfi));
             name = sprintf(['\\figures\\coefficients_dim_%d_g_%03d_t_'...
                 '%d_constrained_nbar.jpg'], ...
-                length(inputState), uint8(g*100), uint8(realT*100));
+                length(inputState), g*100, t*100);
             saveas(fh,[pwd name]);
 %             close(fh);
         end
