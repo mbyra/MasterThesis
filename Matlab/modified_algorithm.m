@@ -30,7 +30,7 @@ maxSteps = 100;
 accuracy = 10;
 
 % Select state to generate QFI(t) and coefficients(t) for.
-initialState = state5Constr;
+initialState = state15Constr;
 
 % Set on/off to view/hide figs with coefficient charts (every 0.25 t unit)
 chartsVisibility = 'on';
