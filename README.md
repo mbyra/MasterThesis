@@ -11,6 +11,7 @@ TODO:
 * fix Matlab code so that it works well for all t, g an dimension, not only for some ranges.
 
 (1) K. Macieszczak. Quantum Fisher Information: Variational principle and simpleiterative algorithm for its efficient computation. arXiv:1312.1356v1, 2013
+
 (2) CVX:  Matlab  Software  for  Disciplined  Convex  Programming. http://cvxr.com/cvx/24
 
 
